@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using MESK.EntityRepository.Abstractions;
+using MESK.EntityRepository.Abstractions.Dto;
 using Microsoft.EntityFrameworkCore;
 using Xunit.Abstractions;
 
@@ -34,18 +35,46 @@ public class EntityRepositoryTest
     class ProductRepository(DbContext context) : EntityRepository<Product, int>(context), IProductRepository { }
 
     [Fact]
+    public async Task GetAllAsync_ReturnsListOfProduct_WhenPaginationQueryGiven()
+    {
+        var opts = CreateInMemoryDbContextOptions();
+        
+        using (var context = new TestDbContext(opts))
+        {
+            await context.Products.AddRangeAsync(GetSeedProducts());
+            await context.SaveChangesAsync();
+        }
+
+        var paginationQuery = new PaginationQuery()
+        {
+            PageNumber = 1,
+            PageSize = 3,
+            SortField = "Price",
+        };
+
+        using (var context = new TestDbContext(opts))
+        {
+            var productsRepository = new ProductRepository(context);
+            var results = await productsRepository.GetAllAsync<ProductDto>(paginationQuery);
+            
+            Assert.NotNull(results);
+            Assert.Equal(6, results.TotalCount);
+            Assert.Equal(3, results.Count);
+            
+            Assert.Equal(100, results.Items[0].Price);
+            Assert.Equal(150, results.Items[1].Price);
+            Assert.Equal(200, results.Items[2].Price);
+        }
+    }
+
+    [Fact]
     public async Task GetAllAsync_ReturnsListOfProducts()
     {
         var opts = CreateInMemoryDbContextOptions();
 
         using (var context = new TestDbContext(opts))
         {
-            context.Products.Add(new Product { Name = "Test1", Description = "Test1Description", Price = 100 });
-            context.Products.Add(new Product { Name = "Test2", Description = "Test2Description", Price = 200 });
-            context.Products.Add(new Product { Name = "Test3", Description = "Test3Description", Price = 300 });
-            context.Products.Add(new Product { Name = "Test4", Description = "Test4Description", Price = 200 });
-            context.Products.Add(new Product { Name = "Test5", Description = "Test5Description", Price = 100 });
-            context.Products.Add(new Product { Name = "Test6", Description = "Test6Description", Price = 200 });
+            await context.Products.AddRangeAsync(GetSeedProducts());
             await context.SaveChangesAsync();
         }
 
@@ -92,12 +121,7 @@ public class EntityRepositoryTest
 
         using (var context = new TestDbContext(opts))
         {
-            context.Products.Add(new Product { Name = "Test1", Description = "Test1Description", Price = 100 });
-            context.Products.Add(new Product { Name = "Test2", Description = "Test2Description", Price = 200 });
-            context.Products.Add(new Product { Name = "Test3", Description = "Test3Description", Price = 300 });
-            context.Products.Add(new Product { Name = "Test4", Description = "Test4Description", Price = 200 });
-            context.Products.Add(new Product { Name = "Test5", Description = "Test5Description", Price = 100 });
-            context.Products.Add(new Product { Name = "Test6", Description = "Test6Description", Price = 200 });
+            await context.Products.AddRangeAsync(GetSeedProducts());
             await context.SaveChangesAsync();
         }
 
@@ -120,4 +144,15 @@ public class EntityRepositoryTest
         => new DbContextOptionsBuilder<TestDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
+    
+    private static List<Product> GetSeedProducts() => new()
+    {
+        new Product { Name = "Test1", Description = "Test1Description", Price = 100 },
+        new Product { Name = "Test2", Description = "Test2Description", Price = 200 },
+        new Product { Name = "Test3", Description = "Test3Description", Price = 300 },
+        new Product { Name = "Test4", Description = "Test4Description", Price = 225 },
+        new Product { Name = "Test5", Description = "Test5Description", Price = 250 },
+        new Product { Name = "Test6", Description = "Test6Description", Price = 150 }
+    };
+
 }
