@@ -1,0 +1,30 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{E328C757-0921-40F7-8019-C7EAA0850BE1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{65E95C0D-7F9C-4000-959C-BA26D80ED37D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MESK.EntityRepository", "MESK.EntityRepository\MESK.EntityRepository.csproj", "{D624CEA7-FDC4-491E-A220-6C8D757CADCD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MESK.EntityRepository.Test", "MESK.EntityRepository.Test\MESK.EntityRepository.Test.csproj", "{D3D95043-0984-4E01-9E5C-00626D475817}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{D624CEA7-FDC4-491E-A220-6C8D757CADCD} = {E328C757-0921-40F7-8019-C7EAA0850BE1}
+		{D3D95043-0984-4E01-9E5C-00626D475817} = {65E95C0D-7F9C-4000-959C-BA26D80ED37D}
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D624CEA7-FDC4-491E-A220-6C8D757CADCD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D624CEA7-FDC4-491E-A220-6C8D757CADCD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D624CEA7-FDC4-491E-A220-6C8D757CADCD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D624CEA7-FDC4-491E-A220-6C8D757CADCD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D3D95043-0984-4E01-9E5C-00626D475817}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D3D95043-0984-4E01-9E5C-00626D475817}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D3D95043-0984-4E01-9E5C-00626D475817}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D3D95043-0984-4E01-9E5C-00626D475817}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
