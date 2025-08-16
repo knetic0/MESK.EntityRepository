@@ -8,5 +8,6 @@ public interface IEntityRepository<in T, in TKey> where T : IEntity<TKey>
     Task<List<TDto>> GetAllAsync<TDto>(CancellationToken cancellationToken = default);
     Task<PaginationResult<TDto>> GetAllAsync<TDto>(PaginationQuery  paginationQuery, CancellationToken cancellationToken = default);
     Task<TDto> CreateAsync<TDto>(T entity, CancellationToken cancellationToken = default);
+    Task<TDto> UpdateAsync<TDto, TUpdateDto>(TKey id, TUpdateDto dto, CancellationToken cancellationToken = default);
     Task DeleteAsync(TKey id, CancellationToken cancellationToken = default);
 }

@@ -19,6 +19,13 @@ public class EntityRepositoryTest
         public decimal Price { get; init; }
     }
 
+    class UpdateProductDto
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public decimal Price { get; set; }
+    }
+
     class ProductDto
     {
         public string Name { get; set; } = string.Empty;
@@ -65,6 +72,35 @@ public class EntityRepositoryTest
             Assert.Equal(100, results.Items[0].Price);
             Assert.Equal(150, results.Items[1].Price);
             Assert.Equal(200, results.Items[2].Price);
+        }
+    }
+
+    [Fact]
+    public async Task UpdateAsync_ReturnsUpdatedProduct_WhenUpdatedSuccess()
+    {
+        var opts = CreateInMemoryDbContextOptions();
+
+        using (var context = new TestDbContext(opts))
+        {
+            await context.Products.AddRangeAsync(GetSeedProducts());
+            await context.SaveChangesAsync();
+        }
+
+        using (var context = new TestDbContext(opts))
+        {
+            var productsRepository = new ProductRepository(context);
+
+            var updateProductDto = new UpdateProductDto()
+            {
+                Name = "Updated Product",
+                Description = "Updated Product",
+                Price = 50,
+            };
+
+            var result = await productsRepository.UpdateAsync<ProductDto, UpdateProductDto>(1, updateProductDto);
+            Assert.Equal(updateProductDto.Name, result.Name);
+            Assert.Equal(updateProductDto.Description, result.Description);
+            Assert.Equal(updateProductDto.Price, result.Price);
         }
     }
 

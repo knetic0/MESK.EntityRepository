@@ -101,13 +101,31 @@ public class EntityRepository<T, TKey>(DbContext context) : IEntityRepository<T,
         return entity.Adapt<TDto>();
     }
 
+    public async Task<TDto> UpdateAsync<TDto, TUpdateDto>(TKey id, TUpdateDto updateDto,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await FindByIdAsync(id, cancellationToken);
+        
+        updateDto.Adapt(entity);
+        
+        await _context.SaveChangesAsync(cancellationToken);
+        
+        return entity.Adapt<TDto>();
+    }
+
     public async Task DeleteAsync(TKey id, CancellationToken cancellationToken = default)
     {
-        var entity = await _context.Set<T>().FindAsync([id], cancellationToken);
-        if (entity == null)
-            throw new EntityNotFoundException(typeof(T), id);
+        var entity = await FindByIdAsync(id, cancellationToken);
             
         _context.Set<T>().Remove(entity);
         await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task<T> FindByIdAsync(TKey id, CancellationToken cancellationToken = default)
+    {
+        var entity = await _context.Set<T>().FindAsync([id], cancellationToken);
+        if (entity is null)
+            throw new EntityNotFoundException(typeof(T), id);
+        return entity;
     }
 }
