@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using MESK.EntityRepository.Abstractions;
 using MESK.EntityRepository.Abstractions.Dto;
+using MESK.EntityRepository.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using Xunit.Abstractions;
 
@@ -64,6 +65,45 @@ public class EntityRepositoryTest
             Assert.Equal(100, results.Items[0].Price);
             Assert.Equal(150, results.Items[1].Price);
             Assert.Equal(200, results.Items[2].Price);
+        }
+    }
+
+    [Fact]
+    public async Task DeleteAsync_ReturnsVoid_WhenEntityExists()
+    {
+        var opts = CreateInMemoryDbContextOptions();
+
+        using (var context = new TestDbContext(opts))
+        {
+            await context.Products.AddRangeAsync(GetSeedProducts());
+            await context.SaveChangesAsync();
+        }
+
+        using (var context = new TestDbContext(opts))
+        {
+            var productsRepository = new ProductRepository(context);
+            await productsRepository.DeleteAsync(1);
+        }
+    }
+    
+    [Fact]
+    public async Task DeleteAsync_ThrowEntityNotFoundException_WhenEntityNotExists()
+    {
+        var opts = CreateInMemoryDbContextOptions();
+
+        using (var context = new TestDbContext(opts))
+        {
+            await context.Products.AddRangeAsync(GetSeedProducts());
+            await context.SaveChangesAsync();
+        }
+
+        using (var context = new TestDbContext(opts))
+        {
+            var productsRepository = new ProductRepository(context);
+
+            await Assert.ThrowsAsync<EntityNotFoundException>(
+                () => productsRepository.DeleteAsync(999)
+            );
         }
     }
 

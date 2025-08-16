@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using Mapster;
 using MESK.EntityRepository.Abstractions;
 using MESK.EntityRepository.Abstractions.Dto;
+using MESK.EntityRepository.Exceptions;
 using Microsoft.EntityFrameworkCore;
 
 namespace MESK.EntityRepository;
@@ -98,5 +99,15 @@ public class EntityRepository<T, TKey>(DbContext context) : IEntityRepository<T,
         await _context.Set<T>().AddAsync(entity, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
         return entity.Adapt<TDto>();
+    }
+
+    public async Task DeleteAsync(TKey id, CancellationToken cancellationToken = default)
+    {
+        var entity = await _context.Set<T>().FindAsync([id], cancellationToken);
+        if (entity == null)
+            throw new EntityNotFoundException(typeof(T), id);
+            
+        _context.Set<T>().Remove(entity);
+        await _context.SaveChangesAsync(cancellationToken);
     }
 }
