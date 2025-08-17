@@ -5,8 +5,6 @@ on:
     branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
-  release:
-    types: [published]
 
 jobs:
   build-and-test:
@@ -50,14 +48,7 @@ jobs:
         run: dotnet build --configuration Release --no-restore
 
       - name: Pack NuGet
-        run: |
-          VERSION="${{ github.event.release.tag_name }}"
-          VERSION="${VERSION#v}"
-          if [[ ! $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]; then
-            echo "Invalid version: $VERSION. Skipping pack."
-            exit 1
-          fi
-          dotnet pack --configuration Release -o out /p:Version=$VERSION
+        run: dotnet pack --configuration Release -o out
 
       - name: Publish to NuGet
         run: dotnet nuget push "out/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
