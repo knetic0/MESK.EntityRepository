@@ -33,7 +33,6 @@ jobs:
   publish-nuget:
     if: github.event_name == 'release'
     runs-on: ubuntu-latest
-    needs: build-and-test
 
     steps:
       - name: Checkout repository
