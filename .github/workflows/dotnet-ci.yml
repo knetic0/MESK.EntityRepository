@@ -52,8 +52,8 @@ jobs:
 
       - name: Pack NuGet
         run: |
-          VERSION=${GITHUB_REF_NAME##*/}
-          VERSION=${VERSION#v}
+          VERSION="${{ github.event.release.tag_name }}"
+          VERSION="${VERSION#v}"
           if [[ ! $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]; then
             echo "Invalid version: $VERSION. Skipping pack."
             exit 1
