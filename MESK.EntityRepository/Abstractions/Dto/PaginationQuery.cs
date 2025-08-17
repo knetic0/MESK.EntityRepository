@@ -21,12 +21,40 @@ public enum SortDirections
 /// </summary>
 public enum MatchModes
 {
+    /// <summary>
+    /// Matches values that are exactly equal to the filter value.
+    /// </summary>
     Equals,
+    
+    /// <summary>
+    /// Matches values that are not equal to the filter value.
+    /// </summary>
     NotEquals,
+    
+    /// <summary>
+    /// Matches values that are greater than the filter value.
+    /// Typically used for numeric or date fields.
+    /// </summary>
     GreaterThan,
+    
+    /// <summary>
+    /// Matches values that are greater than or equal to the filter value.
+    /// Typically used for numeric or date fields.
+    /// </summary>
     GreaterThanOrEqual,
+    
+    /// <summary>
+    /// Matches values that are less than the filter value.
+    /// Typically used for numeric or date fields.
+    /// </summary>
     LessThan,
+    
+    /// <summary>
+    /// Matches values that are less than or equal to the filter value.
+    /// Typically used for numeric or date fields.
+    /// </summary>
     LessThanOrEqual,
+    
     /// <summary>
     /// Match values that contain the given string.
     /// </summary>
