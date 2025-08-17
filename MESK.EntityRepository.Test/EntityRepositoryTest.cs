@@ -7,49 +7,49 @@ using Xunit.Abstractions;
 
 namespace MESK.EntityRepository.Test;
 
+public class Product : Entity<int>
+{
+    [MaxLength(100)]
+    public string Name { get; init; } = string.Empty;
+    [MaxLength(500)]
+    public string Description { get; init; } = string.Empty;
+    public decimal Price { get; init; }
+}
+
+public class UpdateProductDto
+{
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public decimal Price { get; set; }
+}
+
+public class ProductDto
+{
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public decimal Price { get; set; }
+}
+
+public class TestDbContext(DbContextOptions<TestDbContext> options) : DbContext(options)
+{
+    public DbSet<Product> Products { get; set; }
+}
+    
+public interface IProductRepository : IEntityRepository<Product, int> { }
+
+public class ProductRepository(DbContext context) : EntityRepository<Product, int>(context), IProductRepository { }
 
 public class EntityRepositoryTest
 {
-    class Product : Entity<int>
-    {
-        [MaxLength(100)]
-        public string Name { get; init; } = string.Empty;
-        [MaxLength(500)]
-        public string Description { get; init; } = string.Empty;
-        public decimal Price { get; init; }
-    }
-
-    class UpdateProductDto
-    {
-        public string Name { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
-        public decimal Price { get; set; }
-    }
-
-    class ProductDto
-    {
-        public string Name { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
-        public decimal Price { get; set; }
-    }
-
-    class TestDbContext(DbContextOptions<TestDbContext> options) : DbContext(options)
-    {
-        public DbSet<Product> Products { get; set; }
-    }
-    
-    interface IProductRepository : IEntityRepository<Product, int> { }
-
-    class ProductRepository(DbContext context) : EntityRepository<Product, int>(context), IProductRepository { }
-
     [Fact]
     public async Task GetAllAsync_ReturnsListOfProduct_WhenPaginationQueryGiven()
     {
         var opts = CreateInMemoryDbContextOptions();
-        
+
+        var seedProducts = GetSeedProducts();
         using (var context = new TestDbContext(opts))
         {
-            await context.Products.AddRangeAsync(GetSeedProducts());
+            await context.Products.AddRangeAsync(seedProducts);
             await context.SaveChangesAsync();
         }
 
@@ -66,14 +66,77 @@ public class EntityRepositoryTest
             var results = await productsRepository.GetAllAsync<ProductDto>(paginationQuery);
             
             Assert.NotNull(results);
-            Assert.Equal(6, results.TotalCount);
+            Assert.Equal(seedProducts.Count, results.TotalCount);
             Assert.Equal(3, results.Count);
-            
-            Assert.Equal(100, results.Items[0].Price);
-            Assert.Equal(150, results.Items[1].Price);
-            Assert.Equal(200, results.Items[2].Price);
         }
     }
+    
+    [Fact]
+    public async Task GetAllAsync_ReturnsListOfProduct_WhenPaginationQueryGivenWithDescriptionFilter()
+    {
+        var opts = CreateInMemoryDbContextOptions();
+        
+        using (var context = new TestDbContext(opts))
+        {
+            await context.Products.AddRangeAsync(GetSeedProducts());
+            await context.SaveChangesAsync();
+        }
+
+        var paginationQuery = new PaginationQuery
+        {
+            PageNumber = 1,
+            PageSize = 3,
+            SortField = "Price",
+            Filters = new Dictionary<string, FiltersValue>
+            {
+                ["Description"] = new FiltersValue { MatchMode = MatchModes.Contains, Value = "Software" }
+            }
+        };
+
+        using (var context = new TestDbContext(opts))
+        {
+            var repo = new ProductRepository(context);
+            var results = await repo.GetAllAsync<ProductDto>(paginationQuery);
+            
+            Assert.NotNull(results);
+            Assert.Equal(2, results.Count);
+        }
+    }
+
+    [Fact]
+    public async Task GetAllAsync_ReturnsListOfProduct_WhenPaginationQueryGivenWithPriceFilter()
+    {
+        var opts = CreateInMemoryDbContextOptions();
+        
+        using (var context = new TestDbContext(opts))
+        {
+            await context.Products.AddRangeAsync(GetSeedProducts());
+            await context.SaveChangesAsync();
+        }
+
+        var paginationQuery = new PaginationQuery
+        {
+            PageNumber = 1,
+            PageSize = 10,
+            SortField = "Price",
+            Filters = new Dictionary<string, FiltersValue>
+            {
+                ["Price"] = new FiltersValue { MatchMode = MatchModes.LessThan, Value = "100" }
+            }
+        };
+
+        using (var context = new TestDbContext(opts))
+        {
+            var repo = new ProductRepository(context);
+            var results = await repo.GetAllAsync<ProductDto>(paginationQuery);
+            
+            Assert.NotNull(results);
+            Assert.Equal(9, results.Count);
+            var product = results.Items.First();
+            Assert.Equal("T-Shirt Cotton", product.Name);
+        }
+    }
+
 
     [Fact]
     public async Task UpdateAsync_ReturnsUpdatedProduct_WhenUpdatedSuccess()
@@ -147,14 +210,15 @@ public class EntityRepositoryTest
     public async Task GetAllAsync_ReturnsListOfProducts()
     {
         var opts = CreateInMemoryDbContextOptions();
-
+        
+        var seedProducts = GetSeedProducts();
         using (var context = new TestDbContext(opts))
         {
-            await context.Products.AddRangeAsync(GetSeedProducts());
+            await context.Products.AddRangeAsync(seedProducts);
             await context.SaveChangesAsync();
         }
 
-        var productsLength = 6;
+        var productsLength = seedProducts.Count;
         
         using (var context = new TestDbContext(opts))
         {
@@ -210,9 +274,9 @@ public class EntityRepositoryTest
             var result = await productRepository.GetAsync<ProductDto>(testId);
 
             Assert.NotNull(result);
-            Assert.Equal("Test1", result.Name);
-            Assert.Equal("Test1Description", result.Description);
-            Assert.Equal(100, result.Price);
+            Assert.Equal("Laptop Dell XPS", result.Name);
+            Assert.Equal("13-inch ultrabook, Intel i7, 16GB RAM", result.Description);
+            Assert.Equal(1850, result.Price);
         }
     }
     
@@ -223,12 +287,28 @@ public class EntityRepositoryTest
     
     private static List<Product> GetSeedProducts() => new()
     {
-        new Product { Name = "Test1", Description = "Test1Description", Price = 100 },
-        new Product { Name = "Test2", Description = "Test2Description", Price = 200 },
-        new Product { Name = "Test3", Description = "Test3Description", Price = 300 },
-        new Product { Name = "Test4", Description = "Test4Description", Price = 225 },
-        new Product { Name = "Test5", Description = "Test5Description", Price = 250 },
-        new Product { Name = "Test6", Description = "Test6Description", Price = 150 }
-    };
+        new Product { Name = "Laptop Dell XPS", Description = "13-inch ultrabook, Intel i7, 16GB RAM", Price = 1850 },
+        new Product { Name = "Smartphone Samsung Galaxy", Description = "Android phone with AMOLED display", Price = 1200 },
+        new Product { Name = "Wireless Headphones", Description = "Noise cancelling over-ear headphones", Price = 350 },
+        new Product { Name = "Gaming Mouse", Description = "Ergonomic mouse with RGB lighting", Price = 75 },
+        new Product { Name = "Mechanical Keyboard", Description = "Backlit keyboard with blue switches", Price = 150 },
 
+        new Product { Name = "T-Shirt Cotton", Description = "100% cotton, size M", Price = 25 },
+        new Product { Name = "Jeans Slim Fit", Description = "Dark blue slim fit jeans", Price = 60 },
+        new Product { Name = "Sneakers Nike Air", Description = "Comfortable running shoes", Price = 110 },
+        new Product { Name = "Winter Jacket", Description = "Waterproof insulated jacket", Price = 200 },
+        new Product { Name = "Wool Scarf", Description = "Handmade wool scarf", Price = 35 },
+
+        new Product { Name = "C# in Depth", Description = "Programming book by Jon Skeet", Price = 55 },
+        new Product { Name = "Clean Code", Description = "A Handbook of Agile Software Craftsmanship", Price = 45 },
+        new Product { Name = "The Pragmatic Programmer", Description = "Journey to Mastery", Price = 50 },
+        new Product { Name = "Design Patterns", Description = "Elements of Reusable Object-Oriented Software", Price = 65 },
+        new Product { Name = "Introduction to Algorithms", Description = "CLRS textbook", Price = 90 },
+
+        new Product { Name = "Office Chair", Description = "Ergonomic chair with adjustable height", Price = 180 },
+        new Product { Name = "Dining Table", Description = "Wooden table for 6 people", Price = 700 },
+        new Product { Name = "Bookshelf", Description = "5-tier wooden bookshelf", Price = 120 },
+        new Product { Name = "Bed Frame", Description = "Queen size wooden bed frame", Price = 850 },
+        new Product { Name = "Sofa", Description = "3-seater fabric sofa", Price = 950 },
+    };
 }

@@ -21,6 +21,12 @@ public enum SortDirections
 /// </summary>
 public enum MatchModes
 {
+    Equals,
+    NotEquals,
+    GreaterThan,
+    GreaterThanOrEqual,
+    LessThan,
+    LessThanOrEqual,
     /// <summary>
     /// Match values that contain the given string.
     /// </summary>
@@ -76,13 +82,13 @@ public class PaginationQuery
     /// <summary>
     /// Gets or sets the sort direction (Ascending by default).
     /// </summary>
-    public SortDirections SortDirection { get; set; } = SortDirections.Asc;
+    public SortDirections SortDirection { get; init; } = SortDirections.Asc;
     
     /// <summary>
-    /// Gets or sets the filter to apply as a key-value pair:
-    /// Key → field name, Value → filter value and match mode.
+    /// Gets or sets multiple filters to apply.
+    /// Key → property name, Value → filter operator and value.
     /// </summary>
-    public KeyValuePair<string, FiltersValue> Filters { get; set; }
+    public Dictionary<string, FiltersValue>? Filters { get; init; }
 }
 
 /// <summary>

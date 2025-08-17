@@ -29,38 +29,56 @@ public class EntityRepository<T, TKey>(DbContext context) : IEntityRepository<T,
         CancellationToken cancellationToken = default)
     {
         var query = _context.Set<T>().AsNoTracking().AsQueryable();
-        if (!string.IsNullOrEmpty(paginationQuery.Filters.Key) &&
-            !string.IsNullOrEmpty(paginationQuery.Filters.Value.Value))
+        if (paginationQuery.Filters?.Count > 0)
         {
             var parameter = Expression.Parameter(typeof(T), "e");
-            var property = Expression.Property(parameter, paginationQuery.Filters.Key);
-            
-            var toStringCall = Expression.Call(property, "ToString", Type.EmptyTypes);
-            var valueExpression = Expression.Constant(paginationQuery.Filters.Value.Value, typeof(string));
-            
-            Expression? filterExpression = null;
-            switch (paginationQuery.Filters.Value.MatchMode)
+            Expression? combined = null;
+            foreach (var filter in paginationQuery.Filters)
             {
-                case MatchModes.Contains:
-                    filterExpression = Expression.Call(toStringCall,
-                        typeof(string).GetMethod(nameof(string.Contains), new[] { typeof(string) })!, valueExpression);
-                    break;
-                case MatchModes.StartsWith:
-                    filterExpression = Expression.Call(toStringCall,
-                        typeof(string).GetMethod(nameof(string.StartsWith), new[] { typeof(string) })!, valueExpression);
-                    break;
-                case MatchModes.EndsWith:
-                    filterExpression = Expression.Call(toStringCall,
-                        typeof(string).GetMethod(nameof(string.EndsWith), new[] { typeof(string) })!, valueExpression);
-                    break;
-            }
+                var property = Expression.PropertyOrField(parameter, filter.Key);
+                var typedValue = Convert.ChangeType(filter.Value.Value, property.Type);
+                var valueExpression = Expression.Constant(typedValue, property.Type);
 
-            if (filterExpression != null)
+                Expression? filterExpression = null;
+                filterExpression = filter.Value.MatchMode switch
+                {
+                    MatchModes.Equals => Expression.Equal(property, valueExpression),
+                    MatchModes.NotEquals => Expression.NotEqual(property, valueExpression),
+                    MatchModes.GreaterThan => Expression.GreaterThan(property, valueExpression),
+                    MatchModes.GreaterThanOrEqual => Expression.GreaterThanOrEqual(property, valueExpression),
+                    MatchModes.LessThan => Expression.LessThan(property, valueExpression),
+                    MatchModes.LessThanOrEqual => Expression.LessThanOrEqual(property, valueExpression),
+                    MatchModes.Contains => Expression.Call(
+                        property,
+                        typeof(string).GetMethod(nameof(string.Contains), new[] { typeof(string) })!,
+                        valueExpression
+                    ),
+                    MatchModes.StartsWith => Expression.Call(
+                        property,
+                        typeof(string).GetMethod(nameof(string.StartsWith), new[] { typeof(string) })!,
+                        valueExpression
+                    ),
+                    MatchModes.EndsWith => Expression.Call(
+                        property,
+                        typeof(string).GetMethod(nameof(string.EndsWith), new[] { typeof(string) })!,
+                        valueExpression
+                    ),
+                    _ => null
+                };
+                
+                if(filterExpression != null)
+                    combined = combined == null 
+                        ? filterExpression
+                        : Expression.AndAlso(combined, filterExpression);
+            }
+            
+            if (combined != null)
             {
-                var lambda = Expression.Lambda<Func<T, bool>>(filterExpression, parameter);
+                var lambda = Expression.Lambda<Func<T, bool>>(combined, parameter);
                 query = query.Where(lambda);
             }
         }
+        
         if (!string.IsNullOrEmpty(paginationQuery.SortField))
         {
             var parameter = Expression.Parameter(typeof(T), "e");
