@@ -4,12 +4,31 @@
         <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <Title>MESK EntityRepository</Title>
+        <Authors>Mehmet Solak</Authors>
+        <Description> A plug-and-play .NET data access layer, making CRUD + pagination + filtering simple and consistent across your projects.</Description>
+        <Copyright>Copyright 2025</Copyright>
+        <PackageProjectUrl>https://github.com/knetic0/MESK.EntityRepository</PackageProjectUrl>
+        <PackageLicenseUrl>https://github.com/knetic0/MESK.EntityRepository/blob/master/LICENSE</PackageLicenseUrl>
+        <PackageIcon>icon.png</PackageIcon>
+        <RepositoryUrl>https://github.com/knetic0/MESK.EntityRepository</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageTags>entityrepository;genericrepository;crudrepository;entity;</PackageTags>
+        <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     </PropertyGroup>
 
     <ItemGroup>
       <PackageReference Include="Mapster" Version="7.4.2-pre02" />
       <PackageReference Include="Mapster.EFCore" Version="5.1.3-pre02" />
       <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.8" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="icon.png">
+        <Pack>True</Pack>
+        <PackagePath></PackagePath>
+      </None>
     </ItemGroup>
 
 </Project>
