@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using System.Reflection;
 using Mapster;
 using MESK.EntityRepository.Abstractions;
 using MESK.EntityRepository.Abstractions.Dto;
@@ -35,8 +36,14 @@ public class EntityRepository<T, TKey>(DbContext context) : IEntityRepository<T,
             Expression? combined = null;
             foreach (var filter in paginationQuery.Filters)
             {
+                var memberInfo = typeof(T).GetProperty(filter.Key)
+                    ?? (MemberInfo?)typeof(T).GetField(filter.Key);
+
+                if (memberInfo == null) continue;
+                
                 var property = Expression.PropertyOrField(parameter, filter.Key);
-                var typedValue = Convert.ChangeType(filter.Value.Value, property.Type);
+                var targetType = Nullable.GetUnderlyingType(property.Type) ?? property.Type;
+                var typedValue = Convert.ChangeType(filter.Value.Value, targetType);
                 var valueExpression = Expression.Constant(typedValue, property.Type);
 
                 Expression? filterExpression = null;
@@ -79,12 +86,13 @@ public class EntityRepository<T, TKey>(DbContext context) : IEntityRepository<T,
             }
         }
         
-        if (!string.IsNullOrEmpty(paginationQuery.SortField))
+        if (!string.IsNullOrEmpty(paginationQuery.SortField) && 
+            typeof(T).GetProperty(paginationQuery.SortField) != null)
         {
             var parameter = Expression.Parameter(typeof(T), "e");
             var property = Expression.PropertyOrField(parameter, paginationQuery.SortField);
             var lambda = Expression.Lambda(property, parameter);
-            string methodName = paginationQuery.SortDirection == SortDirections.Desc ? "OrderByDescending" : "OrderBy";
+            var methodName = paginationQuery.SortDirection == SortDirections.Desc ? "OrderByDescending" : "OrderBy";
             var orderByCall = Expression.Call(
                 typeof(Queryable),
                 methodName,
@@ -118,6 +126,14 @@ public class EntityRepository<T, TKey>(DbContext context) : IEntityRepository<T,
         await _context.SaveChangesAsync(cancellationToken);
         return entity.Adapt<TDto>();
     }
+    
+    public async Task<List<TDto>> CreateRangeAsync<TDto>(IEnumerable<T> entities, 
+        CancellationToken cancellationToken = default)
+    {
+        await _context.Set<T>().AddRangeAsync(entities, cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
+        return entities.Adapt<List<TDto>>();
+    }
 
     public async Task<TDto> UpdateAsync<TDto, TUpdateDto>(TKey id, TUpdateDto updateDto,
         CancellationToken cancellationToken = default)
@@ -137,6 +153,19 @@ public class EntityRepository<T, TKey>(DbContext context) : IEntityRepository<T,
             
         _context.Set<T>().Remove(entity);
         await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task DeleteRangeAsync(IEnumerable<TKey> ids, CancellationToken cancellationToken = default)
+    {
+        var entities = await _context.Set<T>()
+            .Where(x => ids.Contains(x.Id))
+            .ToListAsync(cancellationToken);
+
+        if (entities.Count > 0)
+        {
+            _context.Set<T>().RemoveRange(entities);
+            await _context.SaveChangesAsync(cancellationToken);
+        }
     }
 
     private async Task<T> FindByIdAsync(TKey id, CancellationToken cancellationToken = default)

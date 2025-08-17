@@ -45,6 +45,15 @@ public interface IEntityRepository<in T, in TKey> where T : IEntity<TKey>
     Task<TDto> CreateAsync<TDto>(T entity, CancellationToken cancellationToken = default);
     
     /// <summary>
+    /// Creates a new entities and returns it mapped to the specified DTO type.
+    /// </summary>
+    /// <typeparam name="TDto">The DTO type to map the created entity to.</typeparam>
+    /// <param name="entities">The entity instance list to create.</param>
+    /// <param name="cancellationToken">Token for cancelling the asynchronous operation.</param>
+    /// <returns>The created entity list mapped to a DTO.</returns>
+    Task<List<TDto>> CreateRangeAsync<TDto>(IEnumerable<T> entities, CancellationToken cancellationToken = default);
+    
+    /// <summary>
     /// Updates an existing entity by its identifier using the provided update DTO.
     /// Returns the updated entity mapped to the specified DTO type.
     /// </summary>
@@ -62,4 +71,11 @@ public interface IEntityRepository<in T, in TKey> where T : IEntity<TKey>
     /// <param name="id">The unique identifier of the entity to delete.</param>
     /// <param name="cancellationToken">Token for cancelling the asynchronous operation.</param>
     Task DeleteAsync(TKey id, CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Deletes an entities by its identifiers.
+    /// </summary>
+    /// <param name="ids">The unique identifiers of the entities to delete.</param>
+    /// <param name="cancellationToken">Token for cancelling the asynchronous operation.</param>
+    Task DeleteRangeAsync(IEnumerable<TKey> ids, CancellationToken cancellationToken = default);
 }

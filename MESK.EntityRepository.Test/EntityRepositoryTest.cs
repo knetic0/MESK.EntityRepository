@@ -3,7 +3,6 @@ using MESK.EntityRepository.Abstractions;
 using MESK.EntityRepository.Abstractions.Dto;
 using MESK.EntityRepository.Exceptions;
 using Microsoft.EntityFrameworkCore;
-using Xunit.Abstractions;
 
 namespace MESK.EntityRepository.Test;
 
@@ -205,6 +204,31 @@ public class EntityRepositoryTest
             );
         }
     }
+    
+    [Fact]
+    public async Task DeleteRangeAsync_ThrowEntityNotFoundException_WhenEntityNotExists()
+    {
+        var opts = CreateInMemoryDbContextOptions();
+
+        var products = GetSeedProducts();
+        using (var context = new TestDbContext(opts))
+        {
+            await context.Products.AddRangeAsync(products);
+            await context.SaveChangesAsync();
+        }
+
+        using (var context = new TestDbContext(opts))
+        {
+            var productsRepository = new ProductRepository(context);
+
+            var ids = new List<int>() { 1, 5 };
+            await productsRepository.DeleteRangeAsync(ids);
+
+            var productsList = await productsRepository.GetAllAsync<ProductDto>();
+            var length = productsList.Count();
+            Assert.Equal(products.Count - ids.Count, length);
+        }
+    }
 
     [Fact]
     public async Task GetAllAsync_ReturnsListOfProducts()
@@ -251,6 +275,45 @@ public class EntityRepositoryTest
             Assert.Equal(result.Name, product.Name);
             Assert.Equal(result.Description, product.Description);
             Assert.Equal(result.Price, product.Price);
+        }
+    }
+    
+    [Fact]
+    public async Task CreateRangeAsync_ReturnsOkResult_WhenEntitiesIsCreated()
+    {
+        var opts = CreateInMemoryDbContextOptions();
+
+        var product1 = new Product()
+        {
+            Name = "Test",
+            Description = "Test",
+            Price = 100.00m
+        };
+
+        var product2 = new Product()
+        {
+            Name = "Test2",
+            Description = "Test2",
+            Price = 100.00m
+        };
+
+        var product3 = new Product()
+        {
+            Name = "Test3",
+            Description = "Test3",
+            Price = 100.00m
+        };
+        
+        var products =  new List<Product>() { product1, product2, product3 };
+
+        using (var context = new TestDbContext(opts))
+        {
+            var productRepository = new ProductRepository(context);
+            var result = await productRepository.CreateRangeAsync<ProductDto>(products);
+            
+            Assert.NotNull(result);
+            Assert.Equal(products.Count, result.Count);
+            Assert.Equal(products[0].Name, result.FirstOrDefault()?.Name);
         }
     }
     

@@ -92,15 +92,30 @@ public sealed class FiltersValue
 /// </summary>
 public class PaginationQuery
 {
-    /// <summary>
-    /// Gets the current page number (1-based).
-    /// </summary>
-    public int PageNumber { get; init; }
+    private int _pageNumber = 1;
+    private int _pageSize = 10;
     
     /// <summary>
-    /// Gets the maximum number of items to include in a page.
+    /// Gets the current page number (1-based).
+    /// Defaults to <c>1</c>.
+    /// Must be greater than or equal to <c>1</c>.
     /// </summary>
-    public int PageSize { get; init; }
+    public int PageNumber
+    {
+        get => _pageNumber;
+        init => _pageNumber = value < 1 ? 1 : value;
+    }
+
+    /// <summary>
+    /// Gets the maximum number of items to include in a page.
+    /// Defaults to <c>10</c>. 
+    /// Must be greater than <c>0</c>.
+    /// </summary>
+    public int PageSize
+    {
+        get => _pageSize;
+        init => _pageSize = value < 1 ? 10 : value;
+    }
     
     /// <summary>
     /// Gets the name of the field to sort results by. Null if no sorting is applied.
