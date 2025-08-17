@@ -121,7 +121,7 @@ public class EntityRepositoryTest
             SortField = "Price",
             Filters = new Dictionary<string, FiltersValue>
             {
-                ["Price"] = new FiltersValue { MatchMode = MatchModes.LessThan, Value = "100" }
+                ["Price"] = new FiltersValue { MatchMode = MatchModes.LessThan, Value = 100 }
             }
         };
 

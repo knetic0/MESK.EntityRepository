@@ -79,12 +79,12 @@ public sealed class FiltersValue
     /// <summary>
     /// Gets or sets the string matching mode to apply (e.g., Contains, StartsWith).
     /// </summary>
-    public MatchModes MatchMode { get; set; }
+    public MatchModes MatchMode { get; init; }
     
     /// <summary>
     /// Gets or sets the string value to filter on.
     /// </summary>
-    public string Value { get; set; } = string.Empty;
+    public object Value { get; init; } = default!;
 }
 
 /// <summary>
