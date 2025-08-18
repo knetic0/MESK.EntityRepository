@@ -141,6 +141,7 @@ public class EntityRepository<T, TKey>(DbContext context) : IEntityRepository<T,
         var entity = await FindByIdAsync(id, cancellationToken);
         
         updateDto.Adapt(entity);
+        entity.UpdatedAt = DateTime.UtcNow;
         
         await _context.SaveChangesAsync(cancellationToken);
         
