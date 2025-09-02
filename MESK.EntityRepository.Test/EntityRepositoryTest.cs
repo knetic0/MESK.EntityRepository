@@ -343,6 +343,68 @@ public class EntityRepositoryTest
         }
     }
     
+    [Fact]
+    public async Task GetAllAsync_ShouldSetHasMore_WhenMoreItemsExist()
+    {
+        // Arrange
+        var opts = CreateInMemoryDbContextOptions();
+        var products = GetSeedProducts();
+        using (var context = new TestDbContext(opts))
+        {
+            await context.Products.AddRangeAsync(GetSeedProducts());
+            await context.SaveChangesAsync();
+        }
+
+        var paginationQuery = new PaginationQuery
+        {
+            PageNumber = 1,
+            PageSize = 3
+        };
+
+        // Act
+        using (var context = new TestDbContext(opts))
+        {
+            var repo = new ProductRepository(context);
+            var result = await repo.GetAllAsync<ProductDto>(paginationQuery);
+
+            // Assert
+            Assert.Equal(products.Count, result.TotalCount);
+            Assert.Equal(3, result.Items.Count);
+            Assert.True(result.HasNextPage);
+        }
+    }
+
+    [Fact]
+    public async Task GetAllAsync_ShouldSetHasMoreFalse_WhenNoMoreItemsExist()
+    {
+        // Arrange
+        var opts = CreateInMemoryDbContextOptions();
+        var products = GetSeedProducts();
+        using (var context = new TestDbContext(opts))
+        {
+            await context.Products.AddRangeAsync(products);
+            await context.SaveChangesAsync();
+        }
+
+        var paginationQuery = new PaginationQuery
+        {
+            PageNumber = 4,
+            PageSize = 5
+        };
+
+        // Act
+        using (var context = new TestDbContext(opts))
+        {
+            var repo = new ProductRepository(context);
+            var result = await repo.GetAllAsync<ProductDto>(paginationQuery);
+
+            // Assert
+            Assert.Equal(products.Count, result.TotalCount);
+            Assert.Equal(5, result.Items.Count);
+            Assert.False(result.HasNextPage);
+        }
+    }
+    
     private DbContextOptions<TestDbContext> CreateInMemoryDbContextOptions()
         => new DbContextOptionsBuilder<TestDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
