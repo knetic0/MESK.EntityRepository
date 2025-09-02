@@ -158,10 +158,15 @@ public class PaginationResult<T>
     /// <summary>
     /// Gets or sets the current page number (1-based).
     /// </summary>
-    public int PageNumber { get; set; }
+    public int PageNumber { get; init; }
     
     /// <summary>
     /// Gets or sets the maximum number of items in each page.
     /// </summary>
-    public int PageSize { get; set; }
+    public int PageSize { get; init; }
+    
+    /// <summary>
+    /// Indicates whether there are more items available after this page.
+    /// </summary>
+    public bool HasNextPage => PageNumber * PageSize < TotalCount;
 }
