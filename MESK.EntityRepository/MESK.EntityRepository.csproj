@@ -11,12 +11,13 @@
         <Copyright>Copyright 2025</Copyright>
         <PackageProjectUrl>https://github.com/knetic0/MESK.EntityRepository</PackageProjectUrl>
         <PackageLicenseUrl>https://github.com/knetic0/MESK.EntityRepository/blob/master/LICENSE</PackageLicenseUrl>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageIcon>icon.png</PackageIcon>
         <RepositoryUrl>https://github.com/knetic0/MESK.EntityRepository</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PackageTags>entityrepository;genericrepository;crudrepository;entity;</PackageTags>
         <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-        <Version>1.0.1</Version>
+        <Version>1.0.2</Version>
     </PropertyGroup>
 
     <ItemGroup>
